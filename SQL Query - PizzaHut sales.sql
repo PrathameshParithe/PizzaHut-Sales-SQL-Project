@@ -127,43 +127,44 @@ FROM
 -- Analyze the cumulative revenue generated over time.
 
 select a.order_date,
-	   a.revenue,
-	   round(sum(revenue) over(order by order_date),2) as cumalative_revenue
-		from
+       a.revenue,
+       round(sum(revenue) over(order by order_date),2) as cumalative_revenue
+	from
         (select o.order_date,
-				round(sum(p.price* od.quantity),1) as revenue
-		from 
-			orders o
-		join 
-			order_details od
-		on o.order_id = od.order_id
-		join 
-			pizzas p on od.pizza_id = p.pizza_id
-		group by o.order_date) a;
+	round(sum(p.price* od.quantity),1) as revenue
+	     FROM 
+	orders o
+	     JOIN 
+	order_details od
+	on o.order_id = od.order_id
+	     JOIN 
+	pizzas p on od.pizza_id = p.pizza_id
+	group by o.order_date) a;
         
 -- Determine the top 3 most ordered pizza types based on revenue for each pizza category.
 
 select
-	category,
+    category,
     name,
     revenue,
     rnk from
-    (select category,
-			name,
-            revenue,
-            rank() over(partition by category order by revenue desc) as rnk
+    (select 
+	category,
+	name,
+        revenue,
+        rank() over(partition by category order by revenue desc) as rnk
             from
-			(select 
-					pt.category,
-                    pt.name,
-                    round(sum(p.price * od.quantity),1) as revenue
+	(select 
+		pt.category,
+                pt.name,
+                round(sum(p.price * od.quantity),1) as revenue
             from 
-				pizza_types pt
+		pizza_types pt
             join 
-				pizzas p on p.pizza_type_id = pt.pizza_type_id
+		pizzas p on p.pizza_type_id = pt.pizza_type_id
             join 
-				order_details od on
-				p.pizza_id = od.pizza_id
+		order_details od on
+		p.pizza_id = od.pizza_id
             group by category,pt.name)a)b
             where rnk <= 3;
 
